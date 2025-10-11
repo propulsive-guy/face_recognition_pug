@@ -30,5 +30,5 @@ COPY . .
 # Cloud Run uses PORT environment variable automatically
 EXPOSE 8080
 
-# ------------------- Run the App -------------------
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+
