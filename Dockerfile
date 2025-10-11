@@ -1,20 +1,23 @@
-# Use official Python image
-FROM python:3.11-slim
+FROM python:3.9-slim
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements
-COPY requirements.txt .
+# Install system dependencies for OpenCV
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Copy requirements first (caching optimization)
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
-COPY app.py .
+# Copy application code
+COPY . .
 
-# Expose port (Cloud Run uses $PORT)
-EXPOSE 8080
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
-# Run the app
-CMD ["python", "app.py"]
+# Use gunicorn for production
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 4 --timeout 0 --preload app:app
