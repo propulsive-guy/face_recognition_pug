@@ -1,0 +1,6 @@
+flask
+keras-facenet
+numpy
+opencv-python-headless
+pymongo
+Pillow
