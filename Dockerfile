@@ -1,34 +1,34 @@
-# Use official Python image as base
+# ------------------- Base Image -------------------
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# ------------------- Set Environment -------------------
+# Prevent Python from writing pyc files and enable unbuffered stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Set work directory
+# ------------------- Set Working Directory -------------------
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        libgl1 \
-        libglib2.0-0 \
-        libsm6 \
-        libxrender1 \
-        libxext6 \
-        ffmpeg \
-        && rm -rf /var/lib/apt/lists/*
+# ------------------- Install System Dependencies -------------------
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
+# ------------------- Copy Requirements -------------------
 COPY requirements.txt .
+
+# ------------------- Install Python Dependencies -------------------
+RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
+# ------------------- Copy App Code -------------------
 COPY . .
 
-# Expose port for Cloud Run
+# ------------------- Expose Port -------------------
+# Cloud Run uses PORT environment variable automatically
 EXPOSE 8080
 
-# Run the app
+# ------------------- Run the App -------------------
 CMD ["python", "app.py"]
