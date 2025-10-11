@@ -168,4 +168,4 @@ def recognize_person():
 # ------------------- Run Server -------------------
 if __name__ == "__main__":
    # Cloud Run sets this automatically
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=8080)
