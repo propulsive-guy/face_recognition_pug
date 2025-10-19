@@ -59,22 +59,34 @@ def cosine_similarity(a, b):
 @app.route("/register", methods=["POST"])
 def register_person():
     try:
+        person_id = request.form.get("id")
         name = request.form.get("name")
+        company_name = request.form.get("company_name")
+        company_size = request.form.get("company_size")
+        department = request.form.get("department")
         image_file = request.files.get("image")
 
-        if not name or not image_file:
-            return jsonify({"error": "Name and image required"}), 400
+        if not all([person_id, name, company_name, company_size, department, image_file]):
+            return jsonify({"error": "All fields (id, name, company_name, company_size, department, image) are required"}), 400
 
         image_bytes = image_file.read()
         encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
         # store in MongoDB
-        person = {"name": name, "image": encoded_image}
+        person = {
+            "id": person_id,
+            "name": name,
+            "company_name": company_name,
+            "company_size": company_size,
+            "department": department,
+            "image": encoded_image
+        }
         collection.insert_one(person)
 
         return jsonify({"message": f"Image stored for {name}"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # ------------------- 2️⃣ Train Endpoint -------------------
     
@@ -147,12 +159,18 @@ def recognize_person():
         # Compare with all embeddings
         similarities = [cosine_similarity(emb, e) for e in embeddings]
         max_sim = max(similarities)
-        best_match = labels[np.argmax(similarities)]
+        best_match_name = labels[np.argmax(similarities)]
 
         THRESHOLD = 0.6  # adjust based on accuracy
         if max_sim >= THRESHOLD:
+            # Fetch additional info from MongoDB
+            person_info = collection.find_one({"name": best_match_name})
             return jsonify({
-                "name": best_match,
+                "id": person_info.get("id"),
+                "name": person_info.get("name"),
+                "company_name": person_info.get("company_name"),
+                "company_size": person_info.get("company_size"),
+                "department": person_info.get("department"),
                 "similarity": float(max_sim)
             }), 200
         else:
@@ -163,6 +181,7 @@ def recognize_person():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # ------------------- Run Server -------------------
 # ------------------- Run Server -------------------
